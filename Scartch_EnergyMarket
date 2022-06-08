@@ -1,0 +1,147 @@
+from dataclasses import replace
+import pandas as pd
+from cProfile import run
+from contextlib import nullcontext
+from pickle import FALSE, TRUE
+from tkinter.tix import CELL, COLUMN
+import requests
+from bs4 import BeautifulSoup
+from pyxll import xl_func
+from openpyxl import Workbook
+from openpyxl import load_workbook
+
+import schedule
+import time
+import tkinter as tk
+import sys, tkinter
+
+from tkinter import ttk
+from tkinter import *
+
+import ast
+import pymysql
+import configparser
+import webbrowser
+
+def readhtml():
+    start_url = "https://www.tge.pl/gas-cfim"
+    download_html = requests.get(start_url)
+
+    response = download_html.text
+
+    soup = BeautifulSoup(response, 'html.parser')
+
+    with open('downloaded.html', 'w', encoding="utf-8") as file:
+        file.write(soup.prettify())
+
+
+    full_table = soup.select('table.footable')[0]
+
+
+    # table_head = full_table.select('tr th')
+
+    table_rows = full_table.select('tr')
+    table_data = []
+    for index, element in enumerate(table_rows):
+        if index > 0:
+            row_list = []
+            values = element.select('td')
+            for value in values:
+                row_list.append(value.text.strip())
+            table_data.append(row_list)
+
+    df = pd.DataFrame(table_data)
+    df.rename(columns = {0:'Contract', 3:'Daily settlement'}, inplace = True)
+
+    list1 = table_data
+    list2 = list1.__getitem__(6)
+    list3 = list2[3]
+
+    start_url2 = "https://www.tge.pl/electricity-cfim"
+    download_html2 = requests.get(start_url2)
+
+    response2 = download_html2.text
+
+    soup2 = BeautifulSoup(response2, 'html.parser')
+
+    with open('downloaded.html', 'w', encoding="utf-8") as file:
+        file.write(soup2.prettify())
+
+    full_table2 = soup2.select('table.footable')[0]
+
+    # table_head2 = full_table2.select('tr th')
+
+    table_rows2 = full_table2.select('tr')
+    table_data2 = []
+    for index, element in enumerate(table_rows2):
+        if index > 0:
+            row_list2 = []
+            values2 = element.select('td')
+            for value in values2:
+                row_list2.append(value.text.strip())
+            table_data2.append(row_list2)
+
+    df2 = pd.DataFrame(table_data2)
+
+    df2.rename(columns = {0:'Contract', 3:'Daily settlement'}, inplace = True)
+
+    list4 = table_data2
+    list5 = list4.__getitem__(17)
+    list6 = list5[3]
+
+
+    def scratch():
+        if list3 and list6 !="-" !=nullcontext !=0:
+            print('dobrze, nie jest puste')
+            with pd.ExcelWriter(r'C:\\<path>.xlsx') as writer:
+                df.to_excel(writer, sheet_name='GAS')
+                df2.to_excel(writer, sheet_name='ENERGY')
+            
+    
+            window = tk.Tk()
+            window.geometry('730x200')
+            
+            window.title("TGE SESSION")
+
+            l = tkinter.Label(window, text = 'automation made by: Norbert, since May 2022', font =("Arial",10))
+            l.grid(row=0, column=0, pady=0)
+            l1 = tkinter.Label(window, text = 'New TGE SESSION is available', font =("Arial",36, "bold"))
+            l1.grid(row=3, column=0, pady=0)  
+
+            def Function_Exit():
+                window.quit()
+                window.destroy()
+
+            def TGE_gas():
+                webbrowser.open(start_url, new=0, autoraise=True)
+                window.quit()
+                window.destroy()
+            
+            def TGE_energy():
+                webbrowser.open(start_url2, new=0, autoraise=True)
+                window.quit()
+                window.destroy()
+            
+            w1 = tkinter.Button(window, text = "WWW - GAS", font = ("Courier",12), background="lightblue", command=TGE_gas)
+            w1.grid(rowspan = 4)
+
+            w2 = tkinter.Button(window, text = "WWW - ENERGY", font = ("Courier",12), background="orange", command=TGE_energy)
+            w2.grid(rowspan = 4)
+
+            b1 = tkinter.Button(window, text = "EXIT", font = ("Courier",12,"bold"), background="red", command=Function_Exit)
+            b1.grid(rowspan = 8)
+
+            window.mainloop()
+
+        else :
+            print('lack of new session')
+        
+    scratch()
+
+
+
+schedule.every(3).seconds.do(readhtml)
+# schedule.every(15).minutes.do(readhtml)
+while 1:
+    schedule.run_pending()
+    time.sleep(1)
