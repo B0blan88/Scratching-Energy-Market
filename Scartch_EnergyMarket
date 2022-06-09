@@ -91,7 +91,7 @@ def readhtml():
 
 
     def scratch():
-        if list3 and list6 !="-" !=nullcontext !=0:
+        if list6 and list3 !="-" !=nullcontext !=0:
             print('dobrze, nie jest puste')
             with pd.ExcelWriter(r'C:\\<path>.xlsx') as writer:
                 df.to_excel(writer, sheet_name='GAS')
